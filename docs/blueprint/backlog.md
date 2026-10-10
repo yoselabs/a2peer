@@ -7,7 +7,7 @@ kind: application · stacks: python-uv · surfaces: - · traits: - · tracker: b
 | | checkpoint | set up | working | evidence | remediation | fixed by |
 |---|---|---|---|---|---|---|
 | ✅ | `backlog.tracker` | yes | yes | beads initialised (.beads/config.yaml) | - | - |
-| ❌ | `backlog.strict-config` | yes | no | import.auto=true (want false) | bd config set no-git-ops true && bd config set create.require-description true && bd config set validation.on-create error && bd config set validation.on-close error && bd config set validation.metadata.mode error && bd config set export.auto false && bd config set export.git-add false && bd config set import.auto false; then unset any BD_*/BEADS_* override | auto |
+| ✅ | `backlog.strict-config` | yes | yes | 8 strict settings in effect from .beads/config.yaml | - | - |
 | ✅ | `backlog.metrics-off` | yes | yes | BD_DISABLE_METRICS=1 in .claude/settings.json | - | - |
 | ✅ | `backlog.no-tracked-export` | yes | yes | no JSONL under .beads is tracked | - | - |
 | ✅ | `backlog.no-local-override` | yes | yes | no local file or session env overrides bd | - | - |
