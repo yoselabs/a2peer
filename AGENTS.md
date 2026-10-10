@@ -1,27 +1,35 @@
-# Agent Instructions
+# a2peer — agent instructions
 
-This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
+a2peer lets one agent session (Claude Code first) consult other agents as advisors — Grok Build,
+Codex CLI, Claude Code — each in its vendor's own tool, over MCP. Status: design done, code not
+started.
 
-> **Architecture in one line:** Issues live in a local Dolt database
-> (`.beads/dolt/`); cross-machine sync uses `bd dolt push/pull` (a
-> git-compatible protocol), stored under `refs/dolt/data` on your git
-> remote — separate from `refs/heads/*` where your code lives.
-> `.beads/issues.jsonl` is a passive export, not the wire protocol.
->
-> See [SYNC_CONCEPTS.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md)
-> for the one-screen overview and anti-patterns (don't treat JSONL as the
-> source of truth; don't `bd import` during normal operation; don't
-> reach for third-party Dolt hosting before trying the default).
+- `docs/design.md` — goal, hard constraints, decisions taken, open decisions, spikes in order.
+- `CONTEXT.md` — glossary (caller, advisor, profile, chat, consult…). Use these words.
+- `docs/research/` — research notes (isolation of advisor processes).
+- `docs/blueprint/` — the shelf blueprint audit of this repo's setup; regenerate, never hand-edit.
 
-## Quick Reference
+## Build and test
+
+Python ≥3.12, uv, src layout (`src/a2peer`), tests in `tests/`.
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work atomically
-bd close <id>         # Complete work
-bd dolt push          # Push beads data to remote
+make bootstrap   # once per clone: commit guard, beads hooks, shelf linter preset (idempotent)
+uv sync          # install the package and dev tools
+make check       # the gate: guard, preset, lint, typecheck, spell, deps, test (coverage floor 65%)
+make format      # ruff format src tests
 ```
+
+`make check` green is the definition of done; the pre-commit hook runs ruff on staged files and
+CI (`.github/workflows/check.yml`) runs `make check` on every push and pull request. The linter
+config in `pyproject.toml` is the shelf preset: change it only with a reason declared in
+`[tool.shelf-preset]`, or `make preset` fails.
+
+## Conventions
+
+- Tests state behaviour; async code is tested with pytest-asyncio.
+- Advisor CLIs are external: tests fake them; a real CLI runs only in a spike or a marked test.
+- Work is tracked in beads (below), never in markdown TODO lists.
 
 ## Non-Interactive Shell Commands
 
@@ -125,3 +133,28 @@ bd prime                # Refresh Beads context
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->
+
+<!-- BEGIN SHELF RESOLVER BLOCK — managed by shelf's onboarding; safe to re-run -->
+### The shelf — shared micro-software you consume
+
+This project consumes **the shelf** (`github.com/yoselabs/shelf`) — shared, ownable,
+contract-guaranteed software pieces, pinned in `pyproject.toml` by git tag. Reach for it before
+hand-rolling substrate; adopt only if **DEEP · STABLE · WINS**; contribute back by *promotion*.
+
+**Three things fire the loop**, not one: substrate glue you are about to write; a bug whose root
+cause was a *dependency's* behaviour; and — the quiet one — a dependency that worked fine and was
+merely **verbose**, where you wrote an expression and thought "why isn't this a method?". "Stop
+caring about X" includes how much you must type to use X. Promote the **thing** a domain has (a type
+the consumer holds), name it `any-<domain>`, never `<lib>-extra`.
+
+**Full behaviour = the shelf loop.** Resolve it **once per session, lazily** — the first time you
+consider adopting or promoting substrate, never at startup:
+
+1. Find the local clone: `$SHELF_HOME` → `../shelf` → `~/Workspaces/shelf`.
+2. If absent (greenfield), clone it once: `git clone https://github.com/yoselabs/shelf ~/Workspaces/shelf`.
+3. Read `<shelf>/docs/agent-loop.md` and follow it. Load once; cache for the session.
+
+Never hit GitHub to start a session or to write code — only to clone (once) or during an actual
+adopt/promote (a lazy `git pull` at that checkpoint). Never commit a local `path=`/editable shelf
+source (the commit guard blocks it).
+<!-- END SHELF RESOLVER BLOCK -->

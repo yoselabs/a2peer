@@ -1,0 +1,32 @@
+# The gate on every push and pull request: the same `make check` as a local commit.
+# `guard` and `preset` read the shelf, so CI clones it (public) and points SHELF_HOME
+# at it; without that they exit 2, which is never a pass. The clone goes outside the
+# workspace so `deptry .` and the linters never scan it.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3
+        with:
+          enable-cache: true
+
+      - name: Clone the shelf
+        run: |
+          git clone --depth 1 https://github.com/yoselabs/shelf "$RUNNER_TEMP/shelf"
+          echo "SHELF_HOME=$RUNNER_TEMP/shelf" >> "$GITHUB_ENV"
+
+      - run: uv sync
+
+      - run: make check

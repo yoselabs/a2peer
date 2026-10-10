@@ -31,3 +31,37 @@ if command -v bd >/dev/null 2>&1; then
   if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi
 fi
 # --- END BEADS INTEGRATION v1.1.2 ---
+
+# shelf-guard (no-local-shelf-source) BEGIN — managed by the shelf installer; safe to re-run.
+SHELF="${SHELF_HOME:-../shelf}"
+[ -d "$SHELF" ] || SHELF="$HOME/Workspaces/shelf"
+GUARD="$SHELF/tools/hooks/forbid-local-shelf-source.py"
+if [ -f "$GUARD" ]; then
+  python3 "$GUARD" || exit 1
+fi
+# shelf-guard (no-local-shelf-source) END
+
+# shelf-lint (ruff + preset drift) BEGIN — managed by the shelf installer; safe to re-run.
+_shelf_lint_staged=$(mktemp)
+trap 'rm -f "$_shelf_lint_staged"' EXIT
+git diff --cached --name-only --diff-filter=ACM -z -- '*.py' > "$_shelf_lint_staged"
+if [ -s "$_shelf_lint_staged" ]; then
+  _ruff=""
+  for _candidate in "./.venv/bin/ruff" "ruff"; do
+    if command -v "$_candidate" >/dev/null 2>&1; then _ruff="$_candidate"; break; fi
+  done
+  if [ -z "$_ruff" ]; then
+    echo "shelf-lint: ruff not found (no ./.venv/bin/ruff, none on PATH) -- SKIPPED, not a pass" >&2
+  else
+    xargs -0 "$_ruff" check --force-exclude < "$_shelf_lint_staged" || exit 1
+    xargs -0 "$_ruff" format --check --force-exclude < "$_shelf_lint_staged" || exit 1
+  fi
+fi
+if git diff --cached --name-only --diff-filter=ACM | grep -qx 'pyproject.toml'; then
+  SHELF="${SHELF_HOME:-../shelf}"
+  [ -d "$SHELF" ] || SHELF="$HOME/Workspaces/shelf"
+  if [ -f "$SHELF/tools/preset_drift.py" ]; then
+    python3 "$SHELF/tools/preset_drift.py" --repo . || exit 1
+  fi
+fi
+# shelf-lint (ruff + preset drift) END
