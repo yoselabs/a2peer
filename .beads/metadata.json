@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "a2peer",
+  "project_id": "6f6f7120-5977-49bb-afe1-73f6a140c430"
+}
