@@ -8,8 +8,4 @@ Status: design stage. See `docs/design.md`.
 
 ## Develop
 
-```bash
-make bootstrap
-uv sync
-make check
-```
+See `AGENTS.md` → Build and test.
