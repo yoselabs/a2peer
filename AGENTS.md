@@ -14,7 +14,8 @@ started.
 Python ≥3.12, uv, src layout (`src/a2peer`), tests in `tests/`.
 
 ```bash
-make bootstrap   # once per clone: commit guard, beads hooks, shelf linter preset (idempotent)
+make bootstrap   # once per clone: commit guard, beads hooks, shelf linter preset
+git checkout .beads/config.yaml  # bootstrap re-enables bd JSONL export; undo it (shelf bug)
 uv sync          # install the package and dev tools
 make check       # the gate: guard, preset, lint, typecheck, spell, deps, test (coverage floor 65%)
 make format      # ruff format src tests

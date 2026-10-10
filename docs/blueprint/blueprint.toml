@@ -1,0 +1,2 @@
+[settings]
+clean-clone-seconds = 18 # gate.clean-clone budget: 2x the measured 9s (2026-10-10)
