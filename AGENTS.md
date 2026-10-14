@@ -14,17 +14,19 @@ started.
 Python ≥3.12, uv, src layout (`src/a2peer`), tests in `tests/`.
 
 ```bash
-make bootstrap   # once per clone: commit guard, beads hooks, shelf linter preset
-git checkout .beads/config.yaml && bd config set import.auto false  # bootstrap loosens bd config; undo it (shelf-cy5)
-uv sync          # install the package and dev tools
-make check       # the gate: guard, preset, lint, typecheck, spell, deps, test (coverage floor 65%)
-make format      # ruff format src tests
+uv sync --locked      # install the package and dev tools
+just tools            # the pinned tools (mise.toml): uv, prek, gitleaks, bd
+uv run just bootstrap # once per clone: commit guard, beads hooks, shelf linter preset
+git checkout .beads/config.yaml   # bootstrap loosens bd config; undo it (shelf-cy5) ...
+# ... then in .beads/config.yaml keep `import:` / `auto: false` (edit the file; `bd config set` writes bd's database)
+uv run just check     # the gate: guard, preset, secrets, lock, lint, typecheck, arch, spell, deps, blueprint, test (coverage floor 65%)
+uv run just format    # ruff format src tests
 ```
 
-`make check` green is the definition of done; the pre-commit hook runs ruff on staged files and
-CI (`.github/workflows/check.yml`) runs `make check` on every push and pull request. The linter
-config in `pyproject.toml` is the shelf preset: change it only with a reason declared in
-`[tool.shelf-preset]`, or `make preset` fails.
+`just check` green is the definition of done; the pre-commit hook (prek) runs ruff on staged files, the
+pre-push hook runs the gate, and CI (`.github/workflows/check.yml`) runs `just check` on every push and pull
+request. The linter config in `pyproject.toml` is the shelf preset: change it only with a reason declared in
+`[tool.shelf-preset]`, or `just preset` fails.
 
 ## Conventions
 
@@ -159,3 +161,23 @@ Never hit GitHub to start a session or to write code — only to clone (once) or
 adopt/promote (a lazy `git pull` at that checkpoint). Never commit a local `path=`/editable shelf
 source (the commit guard blocks it).
 <!-- END SHELF RESOLVER BLOCK -->
+
+<!-- blueprint:begin -->
+## Working agreement (managed by blueprint; do not edit between the markers)
+
+Done = `just check` green over the whole repo. Never `--no-verify`. Commit only on the owner's yes.
+Read a file below when its trigger applies, not before.
+
+| file | read when |
+|---|---|
+| [docs/agents/constitution.md](docs/agents/constitution.md) | before changing anything: how work is done here |
+| [docs/agents/working-with-agents.md](docs/agents/working-with-agents.md) | at session start and handoff: loop, rules, survey |
+| [docs/agents/gate.md](docs/agents/gate.md) | when a check fails, or you add one or touch hooks or CI |
+| [docs/agents/testing.md](docs/agents/testing.md) | before writing or changing any test |
+| [docs/agents/architecture.md](docs/agents/architecture.md) | before adding a module, dependency or layer |
+| [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) | before creating, claiming or closing work (`bd`) |
+| [docs/agents/domain.md](docs/agents/domain.md) | before naming a concept or recording a decision; index: `docs/adr/INDEX.md` |
+| [docs/agents/python.md](docs/agents/python.md) | before writing or changing python code |
+
+Run `/blueprint` to audit this repo's setup; it changes nothing until the owner says yes.
+<!-- blueprint:end -->

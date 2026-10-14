@@ -10,9 +10,30 @@
         ],
         "matcher": ""
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "(bd list --status in_progress --json 2>/dev/null || echo '[]') | jq -c 'if length > 0 then {systemMessage: (\"⚠️  \" + (length|tostring) + \" bd issue(s) left in_progress — close or update before ending the session:\\n\" + ([.[] | \"  - \" + .id + \": \" + .title] | join(\"\\n\")))} else empty end'"
+          }
+        ]
+      }
     ]
   },
   "env": {
     "BD_DISABLE_METRICS": "1"
+  },
+  "extraKnownMarketplaces": {
+    "mattpocock": {
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "mattpocock-skills@mattpocock": true
   }
 }

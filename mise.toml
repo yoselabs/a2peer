@@ -1,0 +1,7 @@
+# Every tool the repo runs, pinned exactly (ADR 0024); mise.lock holds a checksum per platform.
+# Install: `just tools`. Python is uv's (.python-version); just is the rust-just dev dependency (ADR 0023).
+[tools]
+uv = "0.13.0"
+prek = "0.5.5"
+gitleaks = "8.30.1"
+"github:gastownhall/beads" = { version = "1.3.1", bin = "bd" }

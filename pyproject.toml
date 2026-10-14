@@ -171,6 +171,8 @@ dev = [
     "pyrefly>=1.3,<2",          # type checking
     "codespell>=2.3,<3",        # typos in code, docstrings, and docs
     "deptry>=0.20,<1",          # dependency hygiene: unused / missing / transitive
+    "rust-just>=1.58.0",
+    "import-linter>=2.15,<3",
 ]
 
 # ── The reference linter preset ───────────────────────────────────────────────
@@ -182,6 +184,7 @@ dev = [
 # below states why. Keep it legible — this file teaches the convention.
 [tool.pyrefly]
 preset = "strict"
+use-ignore-files = false
 
 [tool.pyrefly.errors]
 deprecated = "error"
@@ -211,3 +214,21 @@ unannotated-return = false
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"
 
+
+[tool.uv]
+required-version = ">=0.13.0"
+
+[tool.importlinter]
+root_package = "a2peer"
+
+[[tool.importlinter.contracts]]
+name = "a2peer modules do not import each other in a cycle"
+type = "acyclic_siblings"
+ancestors = ["a2peer"]
+
+[tool.shelf-preset]
+# `steps` is the shelf's parallel step runner for a gate that takes minutes; this gate runs in seconds, in order.
+recipes-omitted = ["steps"]
+
+[tool.deptry]
+known_first_party = ["a2peer"]

@@ -1,5 +1,5 @@
-# The gate on every push and pull request: the same `make check` as a local commit.
-# `guard` and `preset` read the shelf, so CI clones it (public) and points SHELF_HOME
+# The gate on every push and pull request: the same `just check` as a local commit.
+# `guard`, `preset` and `blueprint` read the shelf, so CI clones it (public) and points SHELF_HOME
 # at it; without that they exit 2, which is never a pass. The clone goes outside the
 # workspace so `deptry .` and the linters never scan it.
 name: check
@@ -15,18 +15,31 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON_PREFERENCE: only-managed
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3
         with:
-          enable-cache: true
+          fetch-depth: 0
+
+      # The pinned tools, uv included (mise.toml, mise.lock; ADR 0024): no setup-uv, which would install the newest uv.
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          install_args: --locked
 
       - name: Clone the shelf
         run: |
           git clone --depth 1 https://github.com/yoselabs/shelf "$RUNNER_TEMP/shelf"
           echo "SHELF_HOME=$RUNNER_TEMP/shelf" >> "$GITHUB_ENV"
 
-      - run: uv sync
+      - run: uv sync --locked
 
-      - run: make check
+      # The beads database from refs/dolt/data, so `beads-lint` judges the beads as pushed (public repo: HTTPS, no key).
+      - run: bd bootstrap
+        env:
+          BD_DISABLE_METRICS: "1"
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: url.https://github.com/.insteadOf
+          GIT_CONFIG_VALUE_0: ssh://git@github.com/
+
+      - run: uv run just check

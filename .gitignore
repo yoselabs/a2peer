@@ -16,3 +16,9 @@ __pycache__/
 htmlcov/
 dist/
 build/
+
+# Agent worktrees and bd gate lock
+.claude/worktrees/
+.worktrees/
+.beads.gate.lock*
+.beads/hooks/
